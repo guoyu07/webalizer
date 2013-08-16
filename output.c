@@ -55,6 +55,7 @@
 
 #ifdef USE_GEOIP
 #include <GeoIP.h>
+#include <GeoIPCity.h>
 #endif
 
 #include "webalizer.h"                        /* main header              */
@@ -1949,9 +1950,9 @@ void top_ctry_table()
 #ifdef USE_GEOIP
    extern int    geoip;
    extern GeoIP  *geo_fp;
-   const  char   *geo_rc=NULL;
+   GeoIPRecord   *geo_rec=NULL;
 #endif
-   char          geo_ctry[3]="--";
+   char          geo_ctry[5]="--";
 
    /* scan hash table adding up domain totals */
    for (i=0;i<MAXHASH;i++)
@@ -1964,6 +1965,7 @@ void top_ctry_table()
             if (isipaddr(hptr->string)>0)
             {
                idx=0;                 /* unresolved/unknown  */
+               bzero(geo_ctry, sizeof(geo_ctry));
 #ifdef USE_DNS
                if (geodb)
                {
@@ -1981,20 +1983,27 @@ void top_ctry_table()
                if (geoip)
                {
                   /* Lookup IP address here,  turn into idx  */
-                  geo_rc=GeoIP_country_code_by_addr(geo_fp, hptr->string);
-                  if (geo_rc==NULL||geo_rc[0]=='\0'||geo_rc[0]=='-')
+                  geo_rec=GeoIP_record_by_addr(geo_fp, hptr->string);
+                  if (geo_rec==NULL||geo_rec->country_code[0]=='\0'||geo_rec->country_code[0]=='-')
                   {
                      if (debug_mode)
                         fprintf(stderr,"GeoIP: %s unknown (returns '%s')\n",
-                                hptr->string,(geo_rc==NULL)?"null":geo_rc);
+                                hptr->string,(geo_rec->country_code==NULL)?"null":geo_rec->country_code);
                   }
                   else
                   {
                      /* index returned geo_ctry */
-                     geo_ctry[0]=tolower(geo_rc[0]);
-                     geo_ctry[1]=tolower(geo_rc[1]);
+                     geo_ctry[0]=tolower(geo_rec->country_code[0]);
+                     geo_ctry[1]=tolower(geo_rec->country_code[1]);
+                     if (geo_ctry[0]=='c'&&geo_ctry[1]=='n'&&geo_rec->region!=NULL)
+                     {
+                        geo_ctry[2]=tolower(geo_rec->region[0]);
+                        geo_ctry[3]=tolower(geo_rec->region[1]);
+                        
+                     }
                      idx=ctry_idx(geo_ctry);
                   }
+                  if (geo_rec!=NULL)   GeoIPRecord_delete(geo_rec);
                }
 #endif /* USE_GEOIP */
             }
