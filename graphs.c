@@ -901,3 +901,12 @@ int ashex2int(char *str)
    /* returns base-10 integer value from a 2 ASCII hex number   */
    return from_hex(str[1])+(from_hex(str[0])*16);
 }
+void gdImageString(gdImagePtr im, gdFontPtr font, int x, int y, unsigned char *s, int color)  
+{  
+   gdImageStringFT(im, 0 , color, "/usr/share/fonts/chinese/TrueType/ukai.ttf", 9 , 0.0, x, y+9, s);  
+}  
+void gdImageStringUp(gdImagePtr im, gdFontPtr font, int x, int y, unsigned char *s, int color)  
+{  
+   gdImageStringFT(im, 0 , color, "/usr/share/fonts/chinese/TrueType/ukai.ttf", 9 , -PI/2, x, y-9 , s);  
+} 
+
