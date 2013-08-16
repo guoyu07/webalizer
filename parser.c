@@ -480,7 +480,7 @@ int parse_record_squid(char *buffer)
       }
       while (*cp1 != '\0') cp1++;
    }
-   if (cp1 < eob) cp1++;
+   while (*cp1==0) cp1++;
 
    *cp2++ = '\"';
 
@@ -500,6 +500,45 @@ int parse_record_squid(char *buffer)
 
    /* strip trailing space(s) */
    while (*cp2==' ') *cp2--='\0';
+   while (*cp1!=0 && cp1<eob) cp1++;
+   while (*cp1==0) cp1++;
+
+   /* skip %Sh/%<A */
+   while (*cp1!=0 && cp1<eob) cp1++;
+   while (*cp1==0) cp1++;
+
+   /* skip %mt */
+   while (*cp1!=0 && cp1<eob) cp1++;
+   while (*cp1==0) cp1++;
+
+   /* Referrer */
+   cpx = cp1;
+   cp2 = log_rec.refer;
+   eos = (cp1+MAXREF-1);
+   if (eos >= eob) eos = eob-1;
+
+   while ( (*cp1 != '\0') && (*cp1 != '\n') && (cp1 != eos) ) *cp2++ = *cp1++;
+   *cp2 = '\0';
+   if (*cp1 != '\0')
+   {
+      if (verbose)
+      {
+         fprintf(stderr,"%s",msg_big_ref);
+         if (debug_mode) fprintf(stderr,": %s\n",cpx);
+         else fprintf(stderr,"\n");
+      }
+      while (*cp1 != '\0') cp1++;
+   }
+   if (cp1 < eob) cp1++;
+
+   /* User-Agent */
+   cpx = cp1;
+   cp2 = log_rec.agent;
+   eos = cp1+(MAXAGENT-1);
+   if (eos >= eob) eos = eob-1;
+
+   while ( (*cp1 != '\0') && (cp1 != eos) ) *cp2++ = *cp1++;
+   *cp2 = '\0';
 
    /* we have no interest in the remaining fields */
    return 1;
